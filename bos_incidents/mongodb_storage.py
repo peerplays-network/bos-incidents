@@ -203,7 +203,7 @@ class IncidentStorage(MongoDBStorage):
             raise InvalidIncidentFormatException()
 
     @retry_auto_reconnect
-    def insert_incident(self, incident):
+    def insert_incident(self, incident, keep_id=False):
         if not incident.get("id_string"):
             incident["id_string"] = self._id_to_string(incident)
 
@@ -213,6 +213,8 @@ class IncidentStorage(MongoDBStorage):
             self._get_collection(collection_name="incident").insert_one(
                 incident
             )
+            if not keep_id:
+                incident.pop("_id")
         except pymongo.errors.DuplicateKeyError:
             raise DuplicateIncidentException()
 
@@ -352,14 +354,14 @@ class EventStorage(IncidentStorage):
 
     @retry_auto_reconnect
     def insert_incident(self, incident):
-        super(EventStorage, self).insert_incident(incident)
+        super(EventStorage, self).insert_incident(incident, keep_id=True)
 
         if incident.get("_id", None) is None:
             raise IncidentStorageException("Something unknown went wrong")
 
         self._insert_or_update_event(incident)
 
-        return incident
+        incident.pop("_id")
 
     @retry_auto_reconnect
     def _insert_or_update_event(self, incident):
