@@ -204,8 +204,6 @@ class IncidentStorage(MongoDBStorage):
     def insert_incident(self, incident):
         if not incident.get("id_string"):
             incident["id_string"] = self._id_to_string(incident)
-        if not incident.get("provider"):
-            incident["provider"] = ""
 
         self.validate_incident(incident)
 

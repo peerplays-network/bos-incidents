@@ -102,10 +102,6 @@
 			"description": "Creation time of this incident",
 			"type": "string",
 			"format": "date-time"
-		},
-		"provider": {
-			"description": "Provider of the incident",
-			"type": "string"
 		}
 	},
 	"required": [
@@ -113,7 +109,6 @@
 		"call",
 		"arguments",
 		"id_string",
-		"unique_string",
-		"provider"
+		"unique_string"
 	]
 }
