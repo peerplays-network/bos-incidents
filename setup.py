@@ -28,7 +28,7 @@ setup(
         'Development Status :: 3 - Alpha',
         'Intended Audience :: Developers',
     ],
-    install_requires=open('requirements.txt').read().split(),
+    install_requires=open('requirements.txt').readlines(),
     setup_requires=['pytest-runner'],
     tests_require=['pytest'],
     include_package_data=True,
