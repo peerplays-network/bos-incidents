@@ -1,6 +1,6 @@
 # Peerplays BOS incident store
 
-Default implementation requires a mongodb server running locally.
+Default implementation requires a mongodb server running locally (localhost:27017)
 
     >>> from bos_incidents import factory
     >>> storage = factory.get_incident_storage()
