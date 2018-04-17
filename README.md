@@ -1,4 +1,9 @@
-# Peerplays BOS incident store
+# Peerplays BOS incident storage
+
+Clone this repository next to the project that has the dependency on the incident storage and 
+include it as egg in requirements.txt via
+
+    -e file:../bos-incidents#egg=peerplays_bos_incidents
 
 Default implementation requires a mongodb server running locally (localhost:27017)
 
