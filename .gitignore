@@ -7,3 +7,5 @@ dump
 env
 .project
 .pydevproject
+
+docs/_build

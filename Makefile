@@ -37,3 +37,7 @@ dist:
 	python3 setup.py bdist_wheel upload
 
 release: clean check dist git
+
+docs:
+							sphinx-apidoc -d 6 -e -f -o docs . *.py tests
+							make -C docs clean html
