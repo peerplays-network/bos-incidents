@@ -1,0 +1,39 @@
+dump_folder: dump/logs
+
+database:
+    use: mongodb
+    retry_policy:
+        num: 3
+        wait_in_ms: 0
+    mongodb:
+        seeds:
+            - localhost:27017
+        databases: 
+            incident-storage:
+                collections:
+                    incident:
+                        schema: incident-schema.json
+                        unique: 
+                            - unique_string
+                            - provider_info.name
+                        indices:
+                            -
+                                - id_string
+                    status:
+            
+    mongodbtest:
+        seeds:
+            - localhost:27017
+        databases: 
+            incident-storage-test:
+                collections:
+                    incident:
+                        schema: incident-schema.json
+                        unique: 
+                            - unique_string
+                            - provider_info.name
+                        indices:
+                            -
+                                - id_string
+                    status:
+            
