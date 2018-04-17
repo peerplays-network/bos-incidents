@@ -1,7 +1,7 @@
 import logging
 
 from . import Config
-from .mongodb_storage import IncidentStorage
+from .mongodb_storage import EventStorage
 
 
 def get_incident_storage(use=None, purge=False):
@@ -26,10 +26,10 @@ def get_incident_storage(use=None, purge=False):
         use = Config.get("database", "use")
 
     def get_mongodb(use_config):
-        return IncidentStorage(mongodb_config=use_config, purge=purge)
+        return EventStorage(mongodb_config=use_config, purge=purge)
 
     def get_mongodb_test(use_config):
-        return IncidentStorage(mongodb_config=use_config, purge=purge)
+        return EventStorage(mongodb_config=use_config, purge=purge)
 
     config = Config.get("database")
     use_config = config[use]

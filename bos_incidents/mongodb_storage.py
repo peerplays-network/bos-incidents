@@ -12,6 +12,8 @@ from . import Config
 from .exceptions import IncidentNotFoundException,\
     DuplicateIncidentException, InvalidIncidentFormatException,\
     IncidentStorageLostException, InvalidQueryException
+from bos_incidents.exceptions import IncidentStorageException
+from pymongo.collection import ReturnDocument
 
 
 def retry_auto_reconnect(func):
@@ -211,7 +213,6 @@ class IncidentStorage(MongoDBStorage):
             self._get_collection(collection_name="incident").insert_one(
                 incident
             )
-            incident.pop("_id")
         except pymongo.errors.DuplicateKeyError:
             raise DuplicateIncidentException()
 
@@ -315,3 +316,78 @@ class IncidentStorage(MongoDBStorage):
 #         filter_dict = {"status": "in_progress"}
 #         filter_dict.update(self._parse_filter(filter_by))
 #         return list(self._operations_storage.find(filter_dict))
+
+
+class EventStorage(IncidentStorage):
+
+    @retry_auto_reconnect
+    def get_event_by_id(self, incident_or_id_dict=None, resolve=True):
+        if incident_or_id_dict is None:
+            raise InvalidQueryException()
+        filter_dict = {
+            "id_string": self._id_to_string(incident_or_id_dict)
+        }
+        event = self._get_collection(collection_name="event").find_one(
+            filter_dict
+        )
+        if resolve:
+            def replace_with_incident(call_dict):
+                if call_dict is None:
+                    return
+                for idx, incident_id in enumerate(call_dict["incidents"]):
+                    incident = self._get_collection(collection_name="incident").find_one(
+                        {"_id": incident_id},
+                        {'_id': False}
+                    )
+                    if not incident:
+                        raise IncidentNotFoundException()
+                    incident.pop("id")
+                    incident.pop("call")
+                    call_dict["incidents"][idx] = incident
+            replace_with_incident(event.get("create", None))
+            replace_with_incident(event.get("in_progress", None))
+            replace_with_incident(event.get("result", None))
+            replace_with_incident(event.get("finish", None))
+        return event
+
+    @retry_auto_reconnect
+    def insert_incident(self, incident):
+        super(EventStorage, self).insert_incident(incident)
+
+        if incident.get("_id", None) is None:
+            raise IncidentStorageException("Something unknown went wrong")
+
+        self._insert_or_update_event(incident)
+
+        return incident
+
+    @retry_auto_reconnect
+    def _insert_or_update_event(self, incident):
+        # check if it exists
+        event = self.get_event_by_id(incident, resolve=False)
+        if not event:
+            event = {
+                "id_string": self._id_to_string(incident)
+            }
+        if event.get(incident["call"], None) is None:
+            event[incident["call"]] = {
+                "incidents": [incident["_id"]],
+                "status": {"name": "unknown"}
+            }
+        else:
+            event[incident["call"]]["incidents"].append(incident["_id"])
+        return self._get_collection(collection_name="event").find_one_and_replace(
+            {"id_string": event["id_string"]},
+            event,
+            upsert=True,
+            return_document=ReturnDocument.AFTER
+        )
+
+    def update_event_status_by_id(self, incident_or_id_dict=None, call=None, status=None):
+        if incident_or_id_dict is None or call is None or status is None:
+            raise InvalidQueryException()
+        return self._get_collection(collection_name="event").find_one_and_update(
+            {"id_string": self._id_to_string(incident_or_id_dict)},
+            {'$set': {call + ".status": status}},
+            return_document=ReturnDocument.AFTER
+        )

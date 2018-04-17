@@ -1,0 +1,62 @@
+{
+	"title": "BOS Dataproxy Json",
+	"description": "BOS dataproxy exchange event trigger format",
+	"type": "object",
+	"properties": {
+		"id_string": {
+			"type": "string",
+			"description": "Unique identifier of this event"
+		},
+		"create": {
+			"type": "object",
+			"properties": {
+				"incidents": {
+					"description": "List of all corresponding incident calls",
+					"type": "list"
+				},
+				"status": {
+					"description": "Status of the automatic processing"
+				}
+			}
+		},
+		"in_progress": {
+			"type": "object",
+			"properties": {
+				"incidents": {
+					"description": "List of all corresponding incident calls",
+					"type": "list"
+				},
+				"status": {
+					"description": "Status of the automatic processing"
+				}
+			}
+		},
+		"finish": {
+			"type": "object",
+			"properties": {
+				"incidents": {
+					"description": "List of all corresponding incident calls",
+					"type": "list"
+				},
+				"status": {
+					"description": "Status of the automatic processing"
+				}
+			}
+		},
+		"result": {
+			"type": "object",
+			"properties": {
+				"incidents": {
+					"description": "List of all corresponding incident calls",
+					"type": "list"
+				},
+				"status": {
+					"description": "Status of the automatic processing"
+				}
+			}
+		}
+	},
+	"required": [
+		"id_string"
+	]
+}
