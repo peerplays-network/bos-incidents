@@ -367,8 +367,9 @@ class EventStorage(IncidentStorage):
     @retry_auto_reconnect
     def _insert_or_update_event(self, incident):
         # check if it exists
-        event = self.get_event_by_id(incident, resolve=False)
-        if not event:
+        try:
+            event = self.get_event_by_id(incident, resolve=False)
+        except EventNotFoundException:
             event = {
                 "id_string": self._id_to_string(incident)
             }

@@ -138,6 +138,12 @@ class TestMongoOperationStorage(unittest.TestCase):
                           self.storage.get_incident,
                           incident1)
 
+    def test_insert__id(self):
+        incident1 = self._get_in_progress()
+        self.storage.insert_incident(incident1)
+
+        assert incident1.get("_id", None) is None
+
     def test_delete(self):
         incident1 = self._get_in_progress()
         self.storage.insert_incident(incident1)
