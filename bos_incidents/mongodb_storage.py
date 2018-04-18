@@ -11,8 +11,7 @@ from jsonschema.exceptions import ValidationError
 from . import Config
 from .exceptions import IncidentNotFoundException,\
     DuplicateIncidentException, InvalidIncidentFormatException,\
-    IncidentStorageLostException, InvalidQueryException
-from bos_incidents.exceptions import IncidentStorageException
+    IncidentStorageLostException, InvalidQueryException, EventNotFoundException, IncidentStorageException
 from pymongo.collection import ReturnDocument
 
 
@@ -350,6 +349,8 @@ class EventStorage(IncidentStorage):
             replace_with_incident(event.get("in_progress", None))
             replace_with_incident(event.get("result", None))
             replace_with_incident(event.get("finish", None))
+        if not event:
+            raise EventNotFoundException()
         return event
 
     @retry_auto_reconnect

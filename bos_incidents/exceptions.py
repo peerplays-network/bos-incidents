@@ -18,5 +18,9 @@ class IncidentNotFoundException(IncidentStorageException):
     pass
 
 
-class InvalidQueryException(Exception):
+class InvalidQueryException(IncidentStorageException):
+    pass
+
+
+class EventNotFoundException(IncidentStorageException):
     pass
