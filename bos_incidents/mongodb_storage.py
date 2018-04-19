@@ -13,6 +13,7 @@ from .exceptions import IncidentNotFoundException,\
     DuplicateIncidentException, InvalidIncidentFormatException,\
     IncidentStorageLostException, InvalidQueryException, EventNotFoundException, IncidentStorageException
 from pymongo.collection import ReturnDocument
+from datetime import date, datetime
 
 
 def retry_auto_reconnect(func):
@@ -322,7 +323,7 @@ class IncidentStorage(MongoDBStorage):
 class EventStorage(IncidentStorage):
 
     @retry_auto_reconnect
-    def get_event_by_id(self, incident_or_id_dict=None, resolve=True):
+    def get_event_by_id(self, incident_or_id_dict=None, resolve=True, keep_id=False):
         if incident_or_id_dict is None:
             raise InvalidQueryException()
         filter_dict = {
@@ -351,6 +352,8 @@ class EventStorage(IncidentStorage):
             replace_with_incident(event.get("finish", None))
         if not event:
             raise EventNotFoundException()
+        if not keep_id:
+            event.pop("_id")
         return event
 
     @retry_auto_reconnect
@@ -387,11 +390,49 @@ class EventStorage(IncidentStorage):
             return_document=ReturnDocument.AFTER
         )
 
-    def update_event_status_by_id(self, incident_or_id_dict=None, call=None, status=None):
-        if incident_or_id_dict is None or call is None or status is None:
+    def get_events_by_call_status(self, call=None, status_name=None, status_expired_before=None):
+        if call is None or status_name is None:
             raise InvalidQueryException()
+
+        filter_dict = {
+            call + ".status.name": status_name
+        }
+        if status_expired_before is not None:
+            if type(status_expired_before) == datetime:
+                status_expired_before = status_expired_before.timestamp()
+            if type(status_expired_before) == int:
+                status_expired_before = float(status_expired_before)
+            if type(status_expired_before) != float:
+                raise InvalidQueryException()
+            filter_dict.update(
+                {
+                    call + ".status.expiration": {"$lt": status_expired_before}
+                }
+            )
+        return self._get_collection(collection_name="event").find(
+            filter_dict,
+            {'_id': False}
+        )
+
+    def update_event_status_by_id(self, incident_or_id_dict=None, call=None, status_name=None, status_expiration=None, status_add=None):
+        if incident_or_id_dict is None or call is None or status_name is None:
+            raise InvalidQueryException()
+
+        status_dict = {
+            "name": status_name}
+        if status_add is not None:
+            status_dict.update(status_add)
+        if status_expiration is not None:
+            if type(status_expiration) == datetime:
+                status_expiration = status_expiration.timestamp()
+            if type(status_expiration) == int:
+                status_expiration = float(status_expiration)
+            if type(status_expiration) != float:
+                raise InvalidQueryException()
+            status_dict.update({"expiration": status_expiration})
+
         return self._get_collection(collection_name="event").find_one_and_update(
             {"id_string": self._id_to_string(incident_or_id_dict)},
-            {'$set': {call + ".status": status}},
+            {'$set': {call + ".status": status_dict}},
             return_document=ReturnDocument.AFTER
         )
