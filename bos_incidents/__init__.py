@@ -9,7 +9,7 @@ import json
 import collections
 
 
-__VERSION__ = '0.0.2'
+__VERSION__ = '0.0.3'
 
 
 class Config():
@@ -53,7 +53,7 @@ class Config():
 
             if not Config.source:
                 Config.source = ""
-            Config.source = Config.source + ";".join(config_files)
+            Config.source = Config.source + ";" + ";".join(config_files)
 
     @staticmethod
     def get_config(config_name=None):
@@ -154,7 +154,7 @@ def set_global_logger():
     os.makedirs(log_folder, exist_ok=True)
     log_format = ('%(asctime)s %(levelname) -10s: %(message)s')
     trfh = TimedRotatingFileHandler(
-        os.path.join(log_folder, "clc-kyc.log"),
+        os.path.join(log_folder, "bos_incidents.log"),
         "midnight",
         1
     )
@@ -176,8 +176,15 @@ def set_global_logger():
 
 
 Config.load("config-defaults.yaml")
+notify = False
 try:
     # overwrites defaults
     Config.load("incident_storage_config.yaml", True)
+    notify = True
 except FileNotFoundError:
     pass
+
+set_global_logger()
+
+if notify:
+    logging.getLogger(__name__).info("Custom config has been loaded\n" + Config.source)
