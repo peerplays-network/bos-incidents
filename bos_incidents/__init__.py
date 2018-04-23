@@ -130,12 +130,6 @@ class Config():
         Config.source = None
 
     @staticmethod
-    def dump_current(file_name="config.json"):
-        output = os.path.join(Config.get_config()["dump_folder"], file_name)
-        with open(output, 'w') as outfile:
-            json.dump(Config.data, outfile)
-
-    @staticmethod
     def _nested_update(d, u):
         for k, v in u.items():
             if isinstance(v, collections.Mapping):
@@ -143,36 +137,6 @@ class Config():
             else:
                 d[k] = v
         return d
-
-
-def set_global_logger():
-    # setup logging
-    # ... log to file system
-    log_folder = os.path.join(Config.get("dump_folder", default="dump"), "logs")
-    log_level = logging.getLevelName(Config.get("logs", "level", default="INFO"))
-
-    os.makedirs(log_folder, exist_ok=True)
-    log_format = ('%(asctime)s %(levelname) -10s: %(message)s')
-    trfh = TimedRotatingFileHandler(
-        os.path.join(log_folder, "bos_incidents.log"),
-        "midnight",
-        1
-    )
-    trfh.suffix = "%Y-%m-%d"
-    trfh.setLevel(log_level)
-    trfh.setFormatter(logging.Formatter(log_format))
-
-    # ... and to console
-    sh = logging.StreamHandler()
-    sh.setLevel(log_level)
-    sh.setFormatter(logging.Formatter(log_format))
-
-    # global config (e.g. for werkzeug)
-    logging.basicConfig(level=log_level,
-                        format=log_format,
-                        handlers=[trfh, sh])
-
-    return [trfh, sh]
 
 
 Config.load("config-defaults.yaml")
@@ -183,8 +147,6 @@ try:
     notify = True
 except FileNotFoundError:
     pass
-
-set_global_logger()
 
 if notify:
     logging.getLogger(__name__).info("Custom config has been loaded\n" + Config.source)
