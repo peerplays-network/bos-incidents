@@ -1,4 +1,5 @@
 include README.md
 include bos_incidents/*.yaml
+include bos_incidents/*.json
 include requirements.txt
 recursive-include tests/dump *

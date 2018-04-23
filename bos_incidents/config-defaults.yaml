@@ -1,5 +1,3 @@
-dump_folder: dump/logs
-
 bos_incidents:
     database:
         use: mongodb
