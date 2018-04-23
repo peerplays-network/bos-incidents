@@ -8,6 +8,7 @@ import json
 from datetime import datetime
 from bos_incidents.exceptions import IncidentNotFoundException,\
     InvalidIncidentFormatException
+from time import sleep
 
 
 class TestMongoOperationStorage(unittest.TestCase):
@@ -131,11 +132,32 @@ class TestMongoOperationStorage(unittest.TestCase):
 
         self.storage.update_event_status_by_id(self._get_in_progress_different_call(),
                                                "create",
-                                               {"name": "pending"})
+                                               status_name="pending",
+                                               status_expiration=datetime.utcnow())
 
         event = self.storage.get_event_by_id(self._get_in_progress_different_call(), resolve=False)
 
-        assert event["create"]["status"] == {"name": "pending"}
+        assert event["create"]["status"]["name"] == "pending"
+
+    def test_status_expiration_query(self):
+        self.test_update_status()
+
+        event = self.storage.get_event_by_id(self._get_in_progress_different_call(), resolve=False)
+
+        noW = datetime.utcnow()
+
+        events = self.storage.get_events_by_call_status("create", "pending", noW)
+
+        self.assertEqual(event, list(events)[0])
+
+        self.storage.update_event_status_by_id(self._get_in_progress_different_call(),
+                                               "create",
+                                               status_name="pending",
+                                               status_expiration=datetime.utcnow())
+
+        events = self.storage.get_events_by_call_status("create", "pending", noW)
+
+        assert list(events) == []
 
     def test_get(self):
         self.test_update_status()

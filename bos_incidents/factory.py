@@ -23,7 +23,7 @@ def get_incident_storage(use=None, purge=False):
     if not use:
         # default operation storage is wanted, print config for clarification
         printConfig = True
-        use = Config.get("database", "use")
+        use = Config.get("bos_incidents", "database", "use")
 
     def get_mongodb(use_config):
         return EventStorage(mongodb_config=use_config, purge=purge)
@@ -31,7 +31,7 @@ def get_incident_storage(use=None, purge=False):
     def get_mongodb_test(use_config):
         return EventStorage(mongodb_config=use_config, purge=purge)
 
-    config = Config.get("database")
+    config = Config.get("bos_incidents", "database")
     use_config = config[use]
 
     use_choice = {
