@@ -9,7 +9,7 @@ import json
 import collections
 
 
-__VERSION__ = '0.0.3'
+__VERSION__ = '0.0.4'
 
 
 class Config():
@@ -49,7 +49,7 @@ class Config():
                     )
                 stream = io.open(file_path, 'r', encoding='utf-8')
                 with stream:
-                    Config._nested_update(Config.data, yaml.load(stream))
+                    Config.data = Config._nested_update(Config.data, yaml.load(stream))
 
             if not Config.source:
                 Config.source = ""
@@ -135,18 +135,23 @@ class Config():
             if isinstance(v, collections.Mapping):
                 d[k] = Config._nested_update(d.get(k, {}), v)
             else:
-                d[k] = v
+                if d:
+                    d[k] = v
+                else:
+                    d = {}
+                    d[k] = v
         return d
 
 
-Config.load("config-defaults.yaml")
-notify = False
-try:
-    # overwrites defaults
-    Config.load("incident_storage_config.yaml", True)
-    notify = True
-except FileNotFoundError:
-    pass
+if not Config.data:
+    Config.load("config-defaults.yaml")
+    notify = False
+    try:
+        # overwrites defaults
+        Config.load("incident_storage_config.yaml", True)
+        notify = True
+    except FileNotFoundError:
+        pass
 
-if notify:
-    logging.getLogger(__name__).info("Custom config has been loaded\n" + Config.source)
+    if notify:
+        logging.getLogger(__name__).info("Custom config has been loaded\n" + Config.source)
