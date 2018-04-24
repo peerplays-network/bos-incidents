@@ -154,4 +154,4 @@ if not Config.data:
         pass
 
     if notify:
-        logging.getLogger(__name__).info("Custom config has been loaded\n" + Config.source)
+        logging.getLogger(__name__).info("Custom config has been loaded " + Config.source)

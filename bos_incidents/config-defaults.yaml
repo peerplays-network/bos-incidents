@@ -3,7 +3,7 @@ bos_incidents:
         use: mongodb
         retry_policy:
             num: 3
-            wait_in_ms: 0
+            wait_in_ms: 1
         mongodb:
             seeds:
                 - localhost:27017
