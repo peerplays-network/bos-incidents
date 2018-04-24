@@ -337,12 +337,12 @@ class EventStorage(IncidentStorage):
         if not event:
             raise EventNotFoundException()
         if resolve:
-            self._resolve_event(event)
+            self.resolve_event(event)
         if not keep_id:
             event.pop("_id")
         return event
 
-    def _resolve_event(self, event):
+    def resolve_event(self, event):
         def replace_with_incident(call_dict):
             if call_dict is None:
                 return
@@ -428,7 +428,7 @@ class EventStorage(IncidentStorage):
             {'_id': False}).sort('id_string', pymongo.DESCENDING)
         resolved = []
         for event in events:
-            self._resolve_event(event)
+            self.resolve_event(event)
             resolved.append(event)
         return resolved
 
