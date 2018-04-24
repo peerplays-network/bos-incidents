@@ -28,8 +28,8 @@ def retry_auto_reconnect(func):
     """
 
     def f_retry(self, *args, **kwargs):
-        num_tries = Config.get("operation_storage", "retry_policy", "num", 3)
-        wait_in_ms = Config.get("operation_storage", "retry_policy", "wait_in_ms", 0)
+        num_tries = Config.get("bos_incidents", "database", "retry_policy", "num", 3)
+        wait_in_ms = Config.get("bos_incidents", "database", "retry_policy", "wait_in_ms", 0)
         exceptions = self.get_retry_exceptions()
         last_exception = None
         for i in range(num_tries):  # @UnusedVariable
@@ -80,22 +80,24 @@ class MongoDBStorage():
         if len(mongodb_config["databases"].keys()) == 1:
             self._default_db = list(mongodb_config["databases"].keys())[0]
 
+        self._collection_names = {}
         for database in mongodb_config["databases"].keys():
             database_object = self._mongodb_client[database]
 
             for collection in mongodb_config["databases"][database]["collections"].keys():
-                if collection in\
-                        database_object.collection_names(include_system_collections=False) and purge:
-                    database_object[collection].drop()
-
                 # if collections doesnt exist, create it
-                if collection not in\
+                collection_config = {"name": collection}
+                try:
+                    collection_config.update(mongodb_config["databases"][database]["collections"][collection])
+                except TypeError:
+                    pass
+                collection_name = collection_config["name"]
+                self._collection_names[collection] = collection_name
+                if collection_name in\
+                        database_object.collection_names(include_system_collections=False) and purge:
+                    database_object[collection_name].drop()
+                if collection_name not in\
                         database_object.collection_names(include_system_collections=False):
-                    collection_config = {"name": collection}
-                    try:
-                        collection_config.update(mongodb_config["databases"][database]["collections"][collection])
-                    except TypeError:
-                        pass
                     self._create_collection(database_object, collection_config)
 
             if self._default_db and len(mongodb_config["databases"][database]["collections"].keys()) == 1:
@@ -109,7 +111,7 @@ class MongoDBStorage():
     def _get_collection(self, database_name=None, collection_name=None):
         if not collection_name and self._default_collection:
             collection_name = self._default_collection
-        return self._get_db(database_name)[collection_name]
+        return self._get_db(database_name)[self._collection_names[collection_name]]
 
     def _create_collection(self, database_object, collection_config):
         database_object.create_collection(
@@ -134,6 +136,9 @@ class MongoDBStorage():
                 database_object[collection_config["name"]].create_index(
                     list_of_tuples,
                     unique=False)
+
+    def get_connection_details(self):
+        return ""
 
 
 class IncidentStorage(MongoDBStorage):
@@ -258,6 +263,20 @@ class IncidentStorage(MongoDBStorage):
         return incident
 
     @retry_auto_reconnect
+    def get_incident_by_unique_string_and_provider(
+        self, unique_string, provider
+    ):
+        incident = self._get_collection(collection_name="incident").find_one(
+            self._unique_key(
+                dict(unique_string=unique_string,
+                     provider_info=dict(name=provider))),
+            {'_id': False}
+        )
+        if not incident:
+            raise IncidentNotFoundException()
+        return incident
+
+    @retry_auto_reconnect
     def get_incidents(self, filter_dict=None):
         incident = self._get_collection(collection_name="incident").find(
             filter_dict,
@@ -335,31 +354,39 @@ class EventStorage(IncidentStorage):
         if not event:
             raise EventNotFoundException()
         if resolve:
-            self._resolve_event(event)
+            self.resolve_event(event)
         if not keep_id:
             event.pop("_id")
         return event
 
-    def _resolve_event(self, event):
+    def resolve_event(self, event):
         def replace_with_incident(call_dict):
             if call_dict is None:
                 return
             for idx, incident_id in enumerate(call_dict["incidents"]):
-                incident = self._get_collection(collection_name="incident").find_one(
-                    {"_id": incident_id},
-                    {'_id': False}
-                )
-                if not incident:
-                    raise IncidentNotFoundException()
-                incident.pop("call")
-                any_id = incident.pop("id")
+                incident = self.resolve_to_incident(incident_id)
+                incident.pop("call", None)
+                any_id = incident.pop("id", None)
                 call_dict["incidents"][idx] = incident
             return any_id
         any_id = replace_with_incident(event.get("create", None))
         replace_with_incident(event.get("in_progress", None))
         replace_with_incident(event.get("result", None))
         replace_with_incident(event.get("finish", None))
-        event["id"] = any_id
+        if event.get("id", None) is None and any_id is not None:
+            event["id"] = any_id
+
+    @retry_auto_reconnect
+    def resolve_to_incident(self, internal_identifier):
+        if type(internal_identifier) == dict:
+            return internal_identifier
+        incident = self._get_collection(collection_name="incident").find_one(
+            {"_id": internal_identifier},
+            {'_id': False}
+        )
+        if not incident:
+            raise IncidentNotFoundException()
+        return incident
 
     @retry_auto_reconnect
     def insert_incident(self, incident):
@@ -419,6 +446,20 @@ class EventStorage(IncidentStorage):
             {'_id': False}
         )
 
+    def get_incidents_from_event(self, event, call=None):
+        if type(event) == dict:
+            event = [event]
+        if type(event) != list:
+            raise Exception("Unknown event given")
+        events = event
+        all_incidents = []
+        for event in events:
+            for key, value in event.items():
+                if type(value) == dict and (call is None or key == call):
+                    for incident in value.get("incidents", []):
+                        all_incidents.append(self.resolve_to_incident(incident))
+        return all_incidents
+
     @retry_auto_reconnect
     def get_events(self, filter_dict=None):
         events = self._get_collection(collection_name="event").find(
@@ -426,7 +467,7 @@ class EventStorage(IncidentStorage):
             {'_id': False}).sort('id_string', pymongo.DESCENDING)
         resolved = []
         for event in events:
-            self._resolve_event(event)
+            self.resolve_event(event)
             resolved.append(event)
         return resolved
 
