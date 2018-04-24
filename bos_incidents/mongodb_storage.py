@@ -260,6 +260,20 @@ class IncidentStorage(MongoDBStorage):
         return incident
 
     @retry_auto_reconnect
+    def get_incident_by_unique_string_and_provider(
+        self, unique_string, provider
+    ):
+        incident = self._get_collection(collection_name="incident").find_one(
+            self._unique_key(
+                dict(unique_string=unique_string,
+                     provider_info=dict(name=provider))),
+            {'_id': False}
+        )
+        if not incident:
+            raise IncidentNotFoundException()
+        return incident
+
+    @retry_auto_reconnect
     def get_incidents(self, filter_dict=None):
         incident = self._get_collection(collection_name="incident").find(
             filter_dict,
