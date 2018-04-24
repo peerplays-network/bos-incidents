@@ -80,22 +80,24 @@ class MongoDBStorage():
         if len(mongodb_config["databases"].keys()) == 1:
             self._default_db = list(mongodb_config["databases"].keys())[0]
 
+        self._collection_names = {}
         for database in mongodb_config["databases"].keys():
             database_object = self._mongodb_client[database]
 
             for collection in mongodb_config["databases"][database]["collections"].keys():
-                if collection in\
+                # if collections doesnt exist, create it
+                collection_config = {"name": collection}
+                try:
+                    collection_config.update(mongodb_config["databases"][database]["collections"][collection])
+                except TypeError:
+                    pass
+                collection_name = collection_config["name"]
+                self._collection_names[collection] = collection_name
+                if collection_name in\
                         database_object.collection_names(include_system_collections=False) and purge:
                     database_object[collection].drop()
-
-                # if collections doesnt exist, create it
-                if collection not in\
+                if collection_name not in\
                         database_object.collection_names(include_system_collections=False):
-                    collection_config = {"name": collection}
-                    try:
-                        collection_config.update(mongodb_config["databases"][database]["collections"][collection])
-                    except TypeError:
-                        pass
                     self._create_collection(database_object, collection_config)
 
             if self._default_db and len(mongodb_config["databases"][database]["collections"].keys()) == 1:
@@ -109,7 +111,7 @@ class MongoDBStorage():
     def _get_collection(self, database_name=None, collection_name=None):
         if not collection_name and self._default_collection:
             collection_name = self._default_collection
-        return self._get_db(database_name)[collection_name]
+        return self._get_db(database_name)[self._collection_names[collection_name]]
 
     def _create_collection(self, database_object, collection_config):
         database_object.create_collection(
