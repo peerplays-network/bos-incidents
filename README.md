@@ -1,19 +1,17 @@
-# Peerplays BOS incident storage
+# BOS-incidents
 
-Clone this repository next to the project that has the dependency on the incident storage and 
-include it as egg in requirements.txt via
+![](https://img.shields.io/pypi/v/bos-incidents.svg?style=for-the-badge)
+![](https://img.shields.io/github/downloads/pbsa/bos-incidents/total.svg?style=for-the-badge)
+![](https://img.shields.io/pypi/pyversions/bos-incidents.svg?style=for-the-badge)
 
-    -e file:../bos-incidents#egg=peerplays_bos_incidents
+[![docs master](https://readthedocs.org/projects/bos-incidents/badge/?version=latest)](http://bos-incidents.rtfd.io/en/latest/)
+[![docs develop](https://readthedocs.org/projects/bos-incidents/badge/?version=develop)](http://bos-incidents.rtfd.io/en/develop/)
 
-Default implementation requires a mongodb server running locally (localhost:27017)
+`bos-incidents` stores incidents from the data-proxies in a mongodb so
+it's status can be tracked and displayed via command line tools in
+`bos-auto` or the web interface `bos-mint`.
 
-    >>> from bos_incidents import factory
-    >>> storage = factory.get_incident_storage()
-    >>> incidents = storage.get_incidents_by_id({
-                "home": "Charlotte Hornets",
-                "start_time": "2018-03-22T23:00:00Z",
-                "event_group_name": "NBA Regular Season",
-                "away": "Memphis Grizzlies",
-                "sport": "Basketball"
-            }
-        )
+## Documentation
+
+[![docs master](https://readthedocs.org/projects/bos-incidents/badge/?version=latest)](http://bos-incidents.rtfd.io/en/latest/)
+[![docs develop](https://readthedocs.org/projects/bos-incidents/badge/?version=develop)](http://bos-incidents.rtfd.io/en/develop/)
