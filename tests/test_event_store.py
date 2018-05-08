@@ -166,6 +166,18 @@ class TestMongoOperationStorage(unittest.TestCase):
 
         assert event["create"]["incidents"][0]["arguments"]
 
+    def test_resolve_to_incident(self):
+        self.test_update_status()
+
+        self.maxDiff = None
+
+        for event in self.storage.get_events(resolve=False):
+            for _incident in event.get("create", {"incidents": {}})["incidents"]:
+                incident = self.storage.resolve_to_incident(_incident)
+                self.assertEqual(incident, {'arguments': {'season': '2018'}, 'call': 'create', 'provider_info': {'name': 'scorespro', 'source_file': '20180323-001101_69528886-0574-4df5-93d4-4bffaab79a34.xml', 'pushed': '2018-03-22T23:12:01.503Z', 'bitArray': '00000001100', 'match_id': '1487356', 'source': 'direct string input'}, 'unique_string': '2018-03-22t230000z-basketball-nba-regular-season-charlotte-hornets-memphis-grizzlies-create-2018', 'id': {'home': 'Charlotte Hornets', 'start_time': '2018-03-22T23:00:00Z', 'event_group_name': 'NBA Regular Season', 'away': 'Memphis Grizzlies', 'sport': 'Basketball'}, 'timestamp': '2018-03-22T23:11:01.542156Z'})
+
+        assert self.storage.get_events()[0] == {'id_string': '2018-03-22T23:00:00Z-Basketball-NBA Regular Season-Charlotte Hornets-Memphis Grizzlies', 'create': {'incidents': [{'arguments': {'season': '2018'}, 'provider_info': {'name': 'scorespro', 'source_file': '20180323-001101_69528886-0574-4df5-93d4-4bffaab79a34.xml', 'pushed': '2018-03-22T23:12:01.503Z', 'bitArray': '00000001100', 'match_id': '1487356', 'source': 'direct string input'}, 'unique_string': '2018-03-22t230000z-basketball-nba-regular-season-charlotte-hornets-memphis-grizzlies-create-2018', 'timestamp': '2018-03-22T23:11:01.542156Z'}, {'arguments': {'season': '2018'}, 'provider_info': {'name': 'enetpulse', 'source_file': '20180323-001101_69528886-0754-4df5-93d4-4bffaab79a34.xml', 'pushed': '2018-03-22T23:11:02.503Z', 'source': 'direct string input'}, 'unique_string': '2018-03-22t230000z-basketball-nba-regular-season-charlotte-hornets-memphis-grizzlies-create-2018', 'timestamp': '2018-03-22T23:11:01.542156Z'}], 'status': {'name': 'pending', 'expiration': 1525782623.862862}}, 'in_progress': {'incidents': [{'arguments': {'whistle_start_time': '2018-03-22T23:10:45.718Z'}, 'provider_info': {'name': 'scorespro', 'source_file': '20180323-001101_69528886-0774-4df5-93d4-4bffaab79a34.xml', 'pushed': '2018-03-22T23:11:01.503Z', 'bitArray': '00000001100', 'match_id': '1487356', 'source': 'direct string input'}, 'unique_string': '2018-03-22t230000z-basketball-nba-regular-season-charlotte-hornets-memphis-grizzlies-in_progress-2018-03-22t231045718z', 'timestamp': '2018-03-22T23:11:01.542156Z'}, {'arguments': {'whistle_start_time': '2018-03-22T23:10:45.718Z'}, 'provider_info': {'name': 'enetpulse', 'source_file': '20180323-001101_69528886-0754-4df5-93d4-4bffaab79a34.xml', 'pushed': '2018-03-22T23:11:02.503Z', 'source': 'direct string input'}, 'unique_string': '2018-03-22t230000z-basketball-nba-regular-season-charlotte-hornets-memphis-grizzlies-in_progress-2018-03-22t231045718z', 'timestamp': '2018-03-22T23:11:01.542156Z'}], 'status': {'name': 'unknown'}}, 'id': {'home': 'Charlotte Hornets', 'start_time': '2018-03-22T23:00:00Z', 'event_group_name': 'NBA Regular Season', 'away': 'Memphis Grizzlies', 'sport': 'Basketball'}}
+
     def test_add_all_from_dump(self):
         for file in os.listdir("dump"):
             abs_path = os.path.join("dump", file)

@@ -74,7 +74,10 @@ class MongoDBStorage():
             raise Exception("No mongo db configuration provided!")
         self._mongodb_config = mongodb_config
 
-        self._mongodb_client = MongoClient(host=mongodb_config["seeds"])
+        self._mongodb_client = MongoClient(host=mongodb_config["seeds"],
+                                           socketTimeoutMS=500,
+                                           connectTimeoutMS=500,
+                                           serverSelectionTimeoutMS=1500)
 
         self._default_db = None
         if len(mongodb_config["databases"].keys()) == 1:
@@ -367,12 +370,19 @@ class EventStorage(IncidentStorage):
                 incident = self.resolve_to_incident(incident_id)
                 incident.pop("call", None)
                 any_id = incident.pop("id", None)
+                incident.pop("id_string", None)
                 call_dict["incidents"][idx] = incident
             return any_id
         any_id = replace_with_incident(event.get("create", None))
-        replace_with_incident(event.get("in_progress", None))
-        replace_with_incident(event.get("result", None))
-        replace_with_incident(event.get("finish", None))
+        if event.get("id", None) is None and any_id is not None:
+            event["id"] = any_id
+        any_id = replace_with_incident(event.get("in_progress", None))
+        if event.get("id", None) is None and any_id is not None:
+            event["id"] = any_id
+        any_id = replace_with_incident(event.get("result", None))
+        if event.get("id", None) is None and any_id is not None:
+            event["id"] = any_id
+        any_id = replace_with_incident(event.get("finish", None))
         if event.get("id", None) is None and any_id is not None:
             event["id"] = any_id
 
@@ -386,6 +396,7 @@ class EventStorage(IncidentStorage):
         )
         if not incident:
             raise IncidentNotFoundException()
+        incident.pop("id_string", None)
         return incident
 
     @retry_auto_reconnect
@@ -461,15 +472,18 @@ class EventStorage(IncidentStorage):
         return all_incidents
 
     @retry_auto_reconnect
-    def get_events(self, filter_dict=None):
+    def get_events(self, filter_dict=None, resolve=True):
         events = self._get_collection(collection_name="event").find(
             filter_dict,
             {'_id': False}).sort('id_string', pymongo.DESCENDING)
         resolved = []
-        for event in events:
-            self.resolve_event(event)
-            resolved.append(event)
-        return resolved
+        if resolve:
+            for event in events:
+                self.resolve_event(event)
+                resolved.append(event)
+            return resolved
+        else:
+            return events
 
     def update_event_status_by_id(self, incident_or_id_dict=None, call=None, status_name=None, status_expiration=None, status_add=None):
         if incident_or_id_dict is None or call is None or status_name is None:

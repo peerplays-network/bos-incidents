@@ -74,7 +74,7 @@ class Config():
         return deepcopy(Config.data)
 
     @staticmethod
-    def get(*args, message=None, default=None):
+    def get(*args, **kwargs):
         """
         This config getter method allows sophisticated and encapsulated access to the config file, while
         being able to define defaults in-code where necessary.
@@ -89,22 +89,24 @@ class Config():
         :param default: default value if not found in config
         :type default: object
         """
-
+        default_given = "default" in kwargs
+        default = kwargs.pop("default", None)
+        message = kwargs.pop("message", None)
         # check if last in args is default value
         if type(args[len(args) - 1]) != str:
-            if default:
+            if default_given:
                 raise KeyError("There can only be one default set. Either use default=value or add non-string values as last positioned argument!")
             default = args[len(args) - 1]
             args = args[0:len(args) - 1]
 
         try:
-            nested = Config.get_config()
+            nested = Config.data
             for key in args:
                 if type(key) == str:
                     nested = nested[key]
                 else:
                     raise KeyError("The given key " + str(key) + " is not valid.")
-            if not nested:
+            if nested is None:
                 raise KeyError()
         except KeyError:
             lookup_key = '.'.join(str(i) for i in args)
@@ -114,7 +116,7 @@ class Config():
                 else:
                     message = "Configuration key {0} not found in {1}!"
                 message = message.format(lookup_key, Config.source)
-            if default is not None:
+            if default_given:
                 logging.getLogger(__name__).debug(message + " Using given default value.")
                 return default
             else:
