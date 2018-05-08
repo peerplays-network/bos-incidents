@@ -1,0 +1,4 @@
+sphinxcontrib-programoutput
+pymongo
+pyyaml
+jsonschema
