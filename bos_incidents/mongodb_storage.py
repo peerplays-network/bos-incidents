@@ -199,6 +199,8 @@ class IncidentStorage(MongoDBStorage):
             raise InvalidIncidentFormatException()
 
     def _id_to_string(self, id_dict):
+        if type(id_dict) == str:
+            return id_dict
         if id_dict.get("id"):
             id_dict = id_dict["id"]
         try:
