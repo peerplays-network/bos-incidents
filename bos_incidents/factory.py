@@ -25,21 +25,10 @@ def get_incident_storage(use=None, purge=False):
         printConfig = True
         use = Config.get("bos_incidents", "database", "use")
 
-    def get_mongodb(use_config):
-        return EventStorage(mongodb_config=use_config, purge=purge)
-
-    def get_mongodb_test(use_config):
-        return EventStorage(mongodb_config=use_config, purge=purge)
-
     config = Config.get("bos_incidents", "database")
     use_config = config[use]
-
-    use_choice = {
-        "mongodb": lambda: get_mongodb(use_config),
-        "mongodbtest": lambda: get_mongodb_test(use_config)
-    }
 
     if printConfig:
         logging.getLogger(__name__).debug("Incident storage initialized with use=" + use)
 
-    return use_choice[use]()
+    return EventStorage(mongodb_config=use_config, purge=purge)
