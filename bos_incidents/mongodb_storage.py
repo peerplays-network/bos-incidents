@@ -9,6 +9,7 @@ import jsonschema
 from jsonschema.exceptions import ValidationError
 
 from . import Config
+from .validator import IncidentValidator
 from .exceptions import IncidentNotFoundException,\
     DuplicateIncidentException, InvalidIncidentFormatException,\
     IncidentStorageLostException, InvalidQueryException, EventNotFoundException, IncidentStorageException
@@ -149,29 +150,8 @@ class IncidentStorage(MongoDBStorage):
     TODO move everything generic into MongoDBStorage
     """
 
-    INCIDENT_SCHEMA = None
-
     def validate_incident(self, incident):
-        """
-            Validates the given reformatted operation against the json schema given by
-            :file:`operation_schema.json`
-
-            :param operation: operation formatted as returned by :func:`decode_operation`
-            :type operation:
-        """
-        if not IncidentStorage.INCIDENT_SCHEMA:
-            schema_file = os.path.join(
-                os.path.dirname(os.path.realpath(__file__)),
-                "incident-schema.json"
-            )
-            IncidentStorage.INCIDENT_SCHEMA = json.loads(io.open(schema_file).read())
-        try:
-            # to validate date format against zulu time, rfc import is needed
-            jsonschema.validate(incident,
-                                IncidentStorage.INCIDENT_SCHEMA,
-                                format_checker=jsonschema.FormatChecker())
-        except ValidationError:
-            raise InvalidIncidentFormatException()
+        IncidentValidator().validate_incident(incident)
 
     def _debug_print(self, operation):
         from pprint import pprint
