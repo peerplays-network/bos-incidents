@@ -1,0 +1,203 @@
+{
+	"$schema": "http://json-schema.org/draft-06/schema#",
+	"title": "BOS Dataproxy Json",
+	"description": "BOS dataproxy exchange event trigger format",
+	"type": "object",
+	"properties": {
+		"id": {
+			"type": "object",
+			"properties": {
+				"sport": {
+					"description": "The unique name of the sport, in english",
+					"type": "string"
+				},
+				"event_group_name": {
+					"description": "The unique name of the event group, in english (e.g. the league)",
+					"type": "string"
+				},
+				"start_time": {
+					"description": "The start time of the event in UTC, ISO format",
+					"type": [
+						"null",
+						"string"
+					],
+					"format": "date-time"
+				},
+				"home": {
+					"description": "The unique name of the home team, in english",
+					"type": "string"
+				},
+				"away": {
+					"description": "The unique name of the away team, in english",
+					"type": "string"
+				}
+			},
+			"required": [
+				"sport",
+				"event_group_name",
+				"start_time",
+				"home",
+				"away"
+			]
+		},
+		"unique_string": {
+			"description": "Unique identifier for this incident",
+			"type": "string"
+		},
+		"timestamp": {
+			"description": "Creation time of this incident",
+			"type": "string",
+			"format": "date-time"
+		}
+	},
+	"oneOf":
+	  [
+	    {
+	      "properties":
+	      {
+	        "call": {
+	        	"allOf": [{"$ref": "#/definitions/call"}],
+				"enum": ["create"]
+			},
+	        "arguments": {
+				"type": "object",
+				"properties": {
+					"allOf": [{"$ref": "#/definitions/common_arguments"}],
+					"season": {
+						"description": "The unique season of the sport",
+						"type": "string"
+					}
+				},
+				"required": ["season"]
+			}
+	      },
+	      "required": ["call", "arguments"]
+	    },
+	    {
+	      "properties":
+	      {
+	        "call": {
+	        	"allOf": [{"$ref": "#/definitions/call"}],
+				"enum": ["in_progress"]
+			},
+	        "arguments": {
+				"type": "object",
+				"properties": {
+					"allOf": [{"$ref": "#/definitions/common_arguments"}],
+					"whistle_start_time": {
+						"description": "The time the end was whistled on in UTC, ISO format",
+						"type": [
+							"null",
+							"string"
+						],
+						"format": "date-time"
+					}
+				},
+				"required": ["whistle_start_time"]
+			}
+	      },
+	      "required": ["call", "arguments"]
+	    },
+	    {
+	      "properties":
+	      {
+	        "call": {
+	        	"allOf": [{"$ref": "#/definitions/call"}],
+				"enum": ["finish"]
+			},
+	        "arguments": {
+				"type": "object",
+				"properties": {
+					"allOf": [{"$ref": "#/definitions/common_arguments"}],
+					"whistle_end_time": {
+						"description": "The time the end was whistled off in UTC, ISO format",
+						"type": [
+							"null",
+							"string"
+						],
+						"format": "date-time"
+					}
+				},
+				"required": ["whistle_end_time"]
+			}
+	      },
+	      "required": ["call", "arguments"]
+	    },
+	    {
+	      "properties":
+	      {
+	        "call": {
+	        	"allOf": [{"$ref": "#/definitions/call"}],
+				"enum": ["result"]
+			},
+	        "arguments": {
+				"type": "object",
+				"properties": {
+					"allOf": [{"$ref": "#/definitions/common_arguments"}],
+					"home_score": {
+						"description": "The score of the home team",
+						"type": "string"
+					},
+					"away_score": {
+						"description": "The score of the away team",
+						"type": "string"
+					}
+				},
+				"required": ["home_score", "away_score"]
+			}
+	      },
+	      "required": ["call", "arguments"]
+	    },
+	    {
+	      "properties":
+	      {
+	        "call": {
+	        	"allOf": [{"$ref": "#/definitions/call"}],
+				"enum": ["unknown"]
+			},
+	        "arguments": {
+				"type": ["null", "string", "object"],
+				"properties": {
+					"allOf": [{"$ref": "#/definitions/common_arguments"}],
+					"none": {
+						"type": ["null", "string"]
+					}
+				}
+			}
+	      },
+	      "required": ["call", "arguments"]
+	    }
+	  ],
+	"required": [
+		"id",
+		"call",
+		"arguments"
+	],
+	"definitions": {
+	    "call": {
+			"description": "The trigger that was called",
+			"type": "string",
+			"enum": [
+				"create",
+				"in_progress",
+				"finish",
+				"result",
+				"unknown",
+				"canceled"
+			]
+		},
+		"common_arguments": {
+			"unsure": {
+				"description": "Indicator if the arguements timestamp might not be accurate",
+				"type": ["boolean"]
+			}
+		}
+	}
+}
+
+
+
+
+        
+
+    
