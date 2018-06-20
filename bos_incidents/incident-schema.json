@@ -49,7 +49,8 @@
 				"finish",
 				"result",
 				"unknown",
-				"canceled"
+				"canceled",
+				"dynamic_bmgs"
 			]
 		},
 		"arguments": {
@@ -88,6 +89,14 @@
 				"away_score": {
 					"description": "The score of the away team",
 					"type": "string"
+				},
+				"reason": {
+					"description": "Reason for cancelation / postponing",
+					"type": "string"
+				},
+				"bmgs": {
+					"description": "List of dict that contains: type, state and value1, value2 ",
+					"type": "object"
 				}
 			}
 		},
@@ -108,7 +117,6 @@
 	"required": [
 		"id",
 		"call",
-		"arguments",
-		"unique_string"
+		"arguments"
 	]
 }
