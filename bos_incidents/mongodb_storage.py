@@ -17,6 +17,15 @@ from pymongo.collection import ReturnDocument
 from datetime import date, datetime
 
 
+INCIDENT_CALLS = [
+    "create",
+    "in_progress",
+    "finish",
+    "result",
+    "dynamic_bmgs",
+]
+
+
 def retry_auto_reconnect(func):
     """
     This is a decorator for functions that utilize some external storage driver.
@@ -355,18 +364,10 @@ class EventStorage(IncidentStorage):
                 incident.pop("id_string", None)
                 call_dict["incidents"][idx] = incident
             return any_id
-        any_id = replace_with_incident(event.get("create", None))
-        if event.get("id", None) is None and any_id is not None:
-            event["id"] = any_id
-        any_id = replace_with_incident(event.get("in_progress", None))
-        if event.get("id", None) is None and any_id is not None:
-            event["id"] = any_id
-        any_id = replace_with_incident(event.get("result", None))
-        if event.get("id", None) is None and any_id is not None:
-            event["id"] = any_id
-        any_id = replace_with_incident(event.get("finish", None))
-        if event.get("id", None) is None and any_id is not None:
-            event["id"] = any_id
+        for call in INCIDENT_CALLS:
+            any_id = replace_with_incident(event.get(call, None))
+            if event.get("id", None) is None and any_id is not None:
+                event["id"] = any_id
 
     @retry_auto_reconnect
     def resolve_to_incident(self, internal_identifier):
