@@ -9,7 +9,7 @@ import json
 import collections
 
 
-__VERSION__ = '0.1.2'
+__VERSION__ = '0.1.3'
 
 
 class Config():
