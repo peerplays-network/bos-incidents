@@ -1,15 +1,9 @@
 import os
 import yaml
 import logging
-from logging.handlers import TimedRotatingFileHandler
 from copy import deepcopy
 import io
-import urllib
-import json
 import collections
-
-
-__VERSION__ = '0.1.3'
 
 
 class Config():
@@ -49,7 +43,8 @@ class Config():
                     )
                 stream = io.open(file_path, 'r', encoding='utf-8')
                 with stream:
-                    Config.data = Config._nested_update(Config.data, yaml.load(stream))
+                    Config.data = Config._nested_update(
+                        Config.data, yaml.load(stream))
 
             if not Config.source:
                 Config.source = ""
