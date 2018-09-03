@@ -3,7 +3,7 @@
 from setuptools import setup
 import sys
 
-from bos_incidents import __VERSION__
+__VERSION__ = '0.1.4'
 
 assert sys.version_info[0] == 3, "We require Python > 3"
 
@@ -31,6 +31,11 @@ setup(
         'Development Status :: 3 - Alpha',
         'Intended Audience :: Developers',
     ],
+    entry_points={
+        'console_scripts': [
+            'bos-incidents = bos_incidents.cli:main'
+        ],
+    },
     install_requires=open('requirements.txt').readlines(),
     setup_requires=['pytest-runner'],
     tests_require=['pytest'],
