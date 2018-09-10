@@ -1,3 +1,7 @@
 pymongo
 pyyaml
 jsonschema
+strict_rfc3339
+pytz
+
+bookiesports
