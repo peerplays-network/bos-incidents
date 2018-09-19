@@ -356,8 +356,9 @@ class EventStorage(IncidentStorage):
 
     def resolve_event(self, event):
         def replace_with_incident(call_dict):
-            if call_dict is None:
-                return
+            if call_dict is None or call_dict.get("incidents", None) is None:
+                return None
+            any_id = None
             for idx, incident_id in enumerate(call_dict["incidents"]):
                 incident = self.resolve_to_incident(incident_id)
                 incident.pop("call", None)
