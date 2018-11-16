@@ -17,6 +17,15 @@ SPACE_REPLACEMENT = "-"
 
 MASK = None
 
+INCIDENT_CALLS = [
+    "create",
+    "in_progress",
+    "finish",
+    "result",
+    "canceled",
+    "dynamic_bmgs",
+]
+
 
 def slugify(value, allow_unicode=False):
     """ Converts to a file name suitable string

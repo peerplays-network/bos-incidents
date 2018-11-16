@@ -279,6 +279,12 @@ class IncidentStorage(MongoDBStorage):
         return incident
 
     @retry_auto_reconnect
+    def get_distinct(self, field):
+        distinct_value = self._get_collection(collection_name="incident").distinct(
+            field)
+        return distinct_value
+
+    @retry_auto_reconnect
     def get_incidents_by_id(self, incident_or_id_dict=None, call=None):
         if incident_or_id_dict is None:
             raise InvalidQueryException()
@@ -324,8 +330,11 @@ class IncidentStorage(MongoDBStorage):
         return True
 
     @retry_auto_reconnect
-    def get_incidents_count(self):
-        return self._get_collection(collection_name="incident").find().count()
+    def get_incidents_count(self, filter_dict=None):
+        if filter_dict is None:
+            return self._get_collection(collection_name="incident").find().count()
+        else:
+            return self._get_collection(collection_name="incident").find(filter_dict).count()
 
 #     @retry_auto_reconnect
 #     def get_operations_in_progress(self, filter_by=None):
