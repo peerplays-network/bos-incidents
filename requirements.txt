@@ -3,5 +3,8 @@ pyyaml
 jsonschema
 strict_rfc3339
 pytz
+click
+click_datetime
+tqdm
 
 bookiesports

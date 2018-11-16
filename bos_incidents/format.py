@@ -17,6 +17,15 @@ SPACE_REPLACEMENT = "-"
 
 MASK = None
 
+INCIDENT_CALLS = [
+    "create",
+    "in_progress",
+    "finish",
+    "result",
+    "canceled",
+    "dynamic_bmgs",
+]
+
 
 def slugify(value, allow_unicode=False):
     """ Converts to a file name suitable string
@@ -53,7 +62,7 @@ def string_to_incident(incident, provider_info=None, mask=None):
         "create": lambda: ["season"],
         "in_progress": lambda: {"format": lambda x: date_to_string(string_to_date(x)), "keys": ["whistle_start_time"]},
         "finish": lambda: {"format": lambda x: date_to_string(string_to_date(x)), "keys": ["whistle_end_time"]},
-        "result": lambda: ["home", "away"],
+        "result": lambda: ["home_score", "away_score"],
         "dynamic_bmgs": lambda: [],
         "canceled": lambda: ["reason"]
     }[delimited[5]]()

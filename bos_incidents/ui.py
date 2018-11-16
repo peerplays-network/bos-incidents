@@ -5,7 +5,7 @@ import logging
 from prettytable import PrettyTable
 from pprint import pprint
 
-from bookied import INCIDENT_CALLS
+from .format import INCIDENT_CALLS
 
 log = logging.getLogger(__name__)
 
