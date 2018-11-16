@@ -16,6 +16,7 @@ from .ui import (
     format_event_incident_statuses,
 )
 
+from .cli_incidents import add
 
 log = logging.getLogger(__name__)
 
@@ -47,6 +48,9 @@ def incidents():
     """ Incident specific calls
     """
     pass
+
+
+add(incidents)
 
 
 @main.command()
@@ -185,5 +189,3 @@ def replay(identifier, call, status_name, url):
 
 if __name__ == "__main__":
     main()
-
-
