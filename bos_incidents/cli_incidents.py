@@ -4,8 +4,9 @@ import logging
 from prettytable import PrettyTable, ALL as ALLBORDERS
 from click_datetime import Datetime
 from dateutil import parser
-from datetime import datetime
 from pprint import pprint
+
+from .format import INCIDENT_CALLS
 
 from .ui import (
     format_incidents,
@@ -48,7 +49,7 @@ def add(incidents):
     @incidents.command()
     @click.argument("begin", required=False, type=Datetime(format='%Y/%m/%d'))
     @click.argument("end", required=False, type=Datetime(format='%Y/%m/%d'))
-    def list(begin, end):
+    def list(begin, end, filter):
         """ List incidents from the bos-incidents store
         """
         from bos_incidents import factory
@@ -88,25 +89,31 @@ def add(incidents):
     @incidents.command()
     @click.argument("unique_string", required=False, default=None)
     @click.argument("provider", required=False, default=None)
-    def show(unique_string, provider):
+    @click.option(
+        "--filter",
+        default=None
+    )
+    def show(unique_string, provider, filter):
         """ Show the content of a specific incidents
         """
         from bos_incidents import factory
         storage = factory.get_incident_storage()
 
         if provider is not None:
-            incident = storage.get_incident_by_unique_string_and_provider(
-                unique_string, provider)
-            pprint(incident)
+            incident = [
+                storage.get_incident_by_unique_string_and_provider(unique_string, provider)
+            ]
         else:
-            if unique_string is not None:
+            if filter is not None:
+                incidents = storage.get_incidents(dict(unique_string={"$regex": ".*" + filter + ".*i"}))
+            elif unique_string is not None:
                 incidents = storage.get_incidents(
                     dict(unique_string=unique_string)
                 )
             else:
                 incidents = storage.get_incidents()
-            for incident in incidents:
-                pprint(incident)
+        for incident in incidents:
+            print(" > " + incident["unique_string"] + "-" + incident["provider_info"]["name"])
 
     @incidents.command()
     @click.argument("status_name")
@@ -130,16 +137,35 @@ def add(incidents):
         click.echo(t)
 
     @incidents.command()
-    @click.argument("unique_string")
-    @click.argument("provider")
-    def rm(unique_string, provider):
+    @click.argument("unique_string", required=False, default=None)
+    @click.argument("provider", required=False, default=None)
+    @click.option(
+        "--filter",
+        default=None
+    )
+    @click.option(
+        "--test",
+        default=False
+    )
+    def rm(unique_string, provider, filter, test):
         """ Remove an incident from the store
         """
         from bos_incidents import factory
         storage = factory.get_incident_storage()
-        incident = storage.get_incident_by_unique_string_and_provider(
-            unique_string, provider)
-        storage.delete_incident(incident)
+
+        if unique_string and provider:
+            incidents = [
+                storage.get_incident_by_unique_string_and_provider(unique_string, provider)
+            ]
+        elif filter:
+            incidents = storage.get_incidents(dict(unique_string={"$regex": ".*" + filter + ".*i"}))
+        if test:
+            print("To be deleted: ")
+        for incident in incidents:
+            if test:
+                print(" > " + incident["unique_string"] + "-" + incident["provider_info"]["name"])
+            else:
+                storage.delete_incident(incident)
 
     @incidents.command()
     @click.argument("unique_string")
