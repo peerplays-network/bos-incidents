@@ -356,7 +356,13 @@ class EventStorage(IncidentStorage):
             filter_dict
         )
         if not event:
-            raise EventNotFoundException()
+            # check for old separator
+            filter_dict["id_string"] = filter_dict["id_string"].replace("__", "-")
+            event = self._get_collection(collection_name="event").find_one(
+                filter_dict
+            )
+            if not event:
+                raise EventNotFoundException()
         if resolve:
             self.resolve_event(event)
         if not keep_id:
@@ -368,12 +374,17 @@ class EventStorage(IncidentStorage):
             if call_dict is None or call_dict.get("incidents", None) is None:
                 return None
             any_id = None
+            _not_none = []
             for idx, incident_id in enumerate(call_dict["incidents"]):
-                incident = self.resolve_to_incident(incident_id)
-                incident.pop("call", None)
-                any_id = incident.pop("id", None)
-                incident.pop("id_string", None)
-                call_dict["incidents"][idx] = incident
+                try:
+                    incident = self.resolve_to_incident(incident_id)
+                    incident.pop("call", None)
+                    any_id = incident.pop("id", None)
+                    incident.pop("id_string", None)
+                    _not_none.append(incident)
+                except IncidentNotFoundException:
+                    print("Reference to incident invalid, event=" + event["id_string"])
+            call_dict["incidents"] = _not_none
             return any_id
         for call in INCIDENT_CALLS:
             any_id = replace_with_incident(event.get(call, None))
@@ -420,6 +431,15 @@ class EventStorage(IncidentStorage):
             }
         else:
             event[incident["call"]]["incidents"].append(incident["_id"])
+        return self._get_collection(collection_name="event").find_one_and_replace(
+            {"id_string": event["id_string"]},
+            event,
+            upsert=True,
+            return_document=ReturnDocument.AFTER
+        )
+
+    @retry_auto_reconnect
+    def update_event(self, event):
         return self._get_collection(collection_name="event").find_one_and_replace(
             {"id_string": event["id_string"]},
             event,
