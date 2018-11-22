@@ -124,6 +124,18 @@ def list(call, status):
     click.echo(str(t))
 
 
+@events.command()
+def ensure_consistency():
+    """ Delete references to deleted incidents
+    """
+    from bos_incidents import factory
+    storage = factory.get_incident_storage()
+    events = storage.get_events(resolve=False)
+    for event in events:
+        storage.resolve_event(event)
+        storage.update_event(event)
+
+
 # Event ##################################################################
 @event.command()
 @click.argument("identifier")
