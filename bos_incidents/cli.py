@@ -132,7 +132,7 @@ def ensure_consistency():
     storage = factory.get_incident_storage()
     events = storage.get_events(resolve=False)
     for event in events:
-        storage.resolve_event(event)
+        storage.resolve_event(event, only_ensure_consistency=True)
         storage.update_event(event)
 
 
