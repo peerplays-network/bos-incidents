@@ -113,7 +113,7 @@ def add(incidents):
             else:
                 incidents = storage.get_incidents()
         for incident in incidents:
-            print(" > " + incident["unique_string"] + "-" + incident["provider_info"]["name"])
+            pprint(incident)
 
     @incidents.command()
     @click.argument("status_name")
@@ -158,7 +158,7 @@ def add(incidents):
                 storage.get_incident_by_unique_string_and_provider(unique_string, provider)
             ]
         elif filter:
-            incidents = storage.get_incidents(dict(unique_string={"$regex": ".*" + filter + ".*i"}))
+            incidents = storage.get_incidents(dict(unique_string={"$regex": ".*" + filter + ".*"}))
         if test:
             print("To be deleted: ")
         for incident in incidents:
@@ -166,6 +166,31 @@ def add(incidents):
                 print(" > " + incident["unique_string"] + "-" + incident["provider_info"]["name"])
             else:
                 storage.delete_incident(incident)
+
+    @incidents.command()
+    @click.option(
+        "--filter",
+        default=None
+    )
+    @click.option(
+        "--test",
+        default=False
+    )
+    def ensure_consistency(filter, test):
+        """ Delete references to deleted incidents
+        """
+        from bos_incidents import factory
+        storage = factory.get_incident_storage()
+        if filter:
+            incidents = storage.get_incidents(dict(unique_string={"$regex": ".*" + filter + ".*"}))
+        else:
+            incidents = storage.get_incidents()
+        for incident in incidents:
+            if "id" not in incident:
+                if test:
+                    print(" > " + incident["unique_string"] + "-" + incident["provider_info"]["name"])
+                else:
+                    storage.delete_incident(incident)
 
     @incidents.command()
     @click.argument("unique_string")

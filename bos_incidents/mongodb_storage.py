@@ -369,7 +369,7 @@ class EventStorage(IncidentStorage):
             event.pop("_id")
         return event
 
-    def resolve_event(self, event):
+    def resolve_event(self, event, only_ensure_consistency=False):
         def replace_with_incident(call_dict):
             if call_dict is None or call_dict.get("incidents", None) is None:
                 return None
@@ -381,15 +381,19 @@ class EventStorage(IncidentStorage):
                     incident.pop("call", None)
                     any_id = incident.pop("id", None)
                     incident.pop("id_string", None)
-                    _not_none.append(incident)
+                    if only_ensure_consistency:
+                        _not_none.append(incident_id)
+                    else:
+                        _not_none.append(incident)
                 except IncidentNotFoundException:
                     print("Reference to incident invalid, event=" + event["id_string"])
             call_dict["incidents"] = _not_none
             return any_id
         for call in INCIDENT_CALLS:
             any_id = replace_with_incident(event.get(call, None))
-            if event.get("id", None) is None and any_id is not None:
-                event["id"] = any_id
+            if not only_ensure_consistency:
+                if event.get("id", None) is None and any_id is not None:
+                    event["id"] = any_id
 
     @retry_auto_reconnect
     def resolve_to_incident(self, internal_identifier):
