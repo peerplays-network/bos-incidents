@@ -113,7 +113,7 @@ def add(incidents):
             else:
                 incidents = storage.get_incidents()
         for incident in incidents:
-            print(" > " + incident["unique_string"] + "-" + incident["provider_info"]["name"])
+            pprint(incident)
 
     @incidents.command()
     @click.argument("status_name")
