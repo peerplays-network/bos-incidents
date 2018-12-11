@@ -7,6 +7,7 @@ import unicodedata
 
 from .datestring import date_to_string, string_to_date
 from .validator import IncidentValidator
+from .exceptions import InvalidIncidentFormatException
 
 from bookiesports.normalize import IncidentsNormalizer
 import hashlib
@@ -110,6 +111,18 @@ def incident_to_string(incident):
     )
 
 
+def id_to_string(incident):
+    if type(incident) == str:
+        return incident
+    if incident.get("id", None) is not None:
+        incident = incident["id"]
+    if incident.get("id_string", None) is not None:
+        return incident["id_string"]
+    return slugify(
+        get_id_as_string(incident)
+    )
+
+
 def reformat_datetimes(formatted_dict):
         """ checks every value, if date found replace with rfc3339 string """
         for (key, value) in formatted_dict.items():
@@ -136,11 +149,14 @@ def serialize_arguments(call, arguments):
 
 
 def get_id_as_string(incident_id):
-    return incident_id["start_time"] \
-        + DELIMITER + incident_id["sport"] \
-        + DELIMITER + incident_id["event_group_name"] \
-        + DELIMITER + incident_id["home"] \
-        + DELIMITER + incident_id["away"]
+    try:
+        return incident_id["start_time"] \
+            + DELIMITER + incident_id["sport"] \
+            + DELIMITER + incident_id["event_group_name"] \
+            + DELIMITER + incident_id["home"] \
+            + DELIMITER + incident_id["away"]
+    except KeyError:
+        raise InvalidIncidentFormatException()
 
 
 def ensure_incident_format(raw_dict):

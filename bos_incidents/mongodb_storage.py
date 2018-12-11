@@ -9,6 +9,7 @@ import jsonschema
 from jsonschema.exceptions import ValidationError
 
 from . import Config
+from .format import id_to_string
 from .validator import IncidentValidator
 from .exceptions import IncidentNotFoundException,\
     DuplicateIncidentException, InvalidIncidentFormatException,\
@@ -188,24 +189,10 @@ class IncidentStorage(MongoDBStorage):
         except KeyError:
             raise InvalidIncidentFormatException()
 
-    def _id_to_string(self, id_dict):
-        if type(id_dict) == str:
-            return id_dict
-        if id_dict.get("id"):
-            id_dict = id_dict["id"]
-        try:
-            return id_dict["start_time"] \
-                + '-' + id_dict["sport"] \
-                + '-' + id_dict["event_group_name"] \
-                + '-' + id_dict["home"] \
-                + '-' + id_dict["away"]
-        except KeyError:
-            raise InvalidIncidentFormatException()
-
     @retry_auto_reconnect
     def insert_incident(self, incident, keep_id=False):
         if not incident.get("id_string"):
-            incident["id_string"] = self._id_to_string(incident)
+            incident["id_string"] = id_to_string(incident)
 
         self.validate_incident(incident)
 
@@ -238,7 +225,7 @@ class IncidentStorage(MongoDBStorage):
         if incident_or_id_dict is None:
             raise InvalidQueryException()
         filter_dict = {
-            "id_string": self._id_to_string(incident_or_id_dict)
+            "id_string": id_to_string(incident_or_id_dict)
         }
         result = self._get_collection(collection_name="incident").delete_many(
             filter_dict
@@ -289,7 +276,7 @@ class IncidentStorage(MongoDBStorage):
         if incident_or_id_dict is None:
             raise InvalidQueryException()
         filter_dict = {
-            "id_string": self._id_to_string(incident_or_id_dict)
+            "id_string": id_to_string(incident_or_id_dict)
         }
         if call is not None:
             filter_dict.update({
@@ -315,7 +302,7 @@ class IncidentStorage(MongoDBStorage):
         if incident_or_id_dict is None:
             raise InvalidQueryException()
         filter_dict = {
-            "id_string": self._id_to_string(incident_or_id_dict)
+            "id_string": id_to_string(incident_or_id_dict)
         }
         if call is not None:
             filter_dict.update({
@@ -350,19 +337,13 @@ class EventStorage(IncidentStorage):
         if incident_or_id_dict is None:
             raise InvalidQueryException()
         filter_dict = {
-            "id_string": self._id_to_string(incident_or_id_dict)
+            "id_string": id_to_string(incident_or_id_dict)
         }
         event = self._get_collection(collection_name="event").find_one(
             filter_dict
         )
         if not event:
-            # check for old separator
-            filter_dict["id_string"] = filter_dict["id_string"].replace("__", "-")
-            event = self._get_collection(collection_name="event").find_one(
-                filter_dict
-            )
-            if not event:
-                raise EventNotFoundException()
+            raise EventNotFoundException()
         if resolve:
             self.resolve_event(event)
         if not keep_id:
@@ -426,7 +407,7 @@ class EventStorage(IncidentStorage):
             event = self.get_event_by_id(incident, resolve=False)
         except EventNotFoundException:
             event = {
-                "id_string": self._id_to_string(incident)
+                "id_string": id_to_string(incident)
             }
         if event.get(incident["call"], None) is None:
             event[incident["call"]] = {
@@ -521,7 +502,7 @@ class EventStorage(IncidentStorage):
             status_dict.update({"expiration": status_expiration})
 
         return self._get_collection(collection_name="event").find_one_and_update(
-            {"id_string": self._id_to_string(incident_or_id_dict)},
+            {"id_string": id_to_string(incident_or_id_dict)},
             {'$set': {call + ".status": status_dict}},
             return_document=ReturnDocument.AFTER
         )
