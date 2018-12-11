@@ -501,8 +501,11 @@ class EventStorage(IncidentStorage):
                 raise InvalidQueryException()
             status_dict.update({"expiration": status_expiration})
 
-        return self._get_collection(collection_name="event").find_one_and_update(
+        event = self._get_collection(collection_name="event").find_one_and_update(
             {"id_string": id_to_string(incident_or_id_dict)},
             {'$set': {call + ".status": status_dict}},
             return_document=ReturnDocument.AFTER
         )
+        if not event:
+            raise EventNotFoundException()
+        return event

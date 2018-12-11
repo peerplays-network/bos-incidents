@@ -112,8 +112,6 @@ def incident_to_string(incident):
 
 
 def id_to_string(incident):
-    if type(incident) == str:
-        return incident
     if incident.get("id", None) is not None:
         incident = incident["id"]
     return slugify(
