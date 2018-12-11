@@ -103,7 +103,6 @@ def replay_from_file(filename, proposer, approver, url, call, dry_run):
 @events.command()
 @click.option("--call")
 @click.option("--status")
-@click.option("--providers")
 def list(call, status):
     """ List events
     """
