@@ -107,7 +107,7 @@ def incident_to_string(incident):
         arguments_as_string = DELIMITER + arguments_as_string
 
     return slugify(
-        get_id_as_string(incident["id"]) + DELIMITER + incident["call"] + arguments_as_string
+        get_reconstruct_string(incident["id"]) + DELIMITER + incident["call"] + arguments_as_string
     )
 
 
@@ -117,7 +117,7 @@ def id_to_string(incident):
     if incident.get("id", None) is not None:
         incident = incident["id"]
     return slugify(
-        get_id_as_string(incident)
+        get_reconstruct_string(incident)
     )
 
 
@@ -147,6 +147,15 @@ def serialize_arguments(call, arguments):
 
 
 def get_id_as_string(incident_id):
+    """
+    @deprecated: use get_reconstruct_string
+    :param incident_id:
+    :type incident_id:
+    """
+    return get_reconstruct_string(incident_id)
+
+
+def get_reconstruct_string(incident_id):
     try:
         return incident_id["start_time"] \
             + DELIMITER + incident_id["sport"] \
