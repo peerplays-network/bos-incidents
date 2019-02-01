@@ -221,11 +221,14 @@ class TestMongoOperationStorage(unittest.TestCase):
                           incident)
 
     def test_add_all_from_dump(self):
-        for file in os.listdir("dump"):
-            abs_path = os.path.join("dump", file)
+        dump = os.path.join(os.path.dirname(__file__), "dump")
+        for file in os.listdir(dump):
+            abs_path = os.path.join(dump, file)
             if os.path.isfile(abs_path):
                 incident = json.loads(io.open(abs_path).read())
                 self.storage.insert_incident(incident)
 
-        self.assertEqual(self.storage.get_incidents_count(),
-                         12)
+        self.assertEqual(
+            self.storage.get_incidents_count(),
+            12
+        )

@@ -44,6 +44,7 @@ class TestMongoOperationStorage(unittest.TestCase):
             "2018-03-22t230000z__basketball__nba-regular-season__charlotte-hornets__memphis-grizzlies__in_progress__2018-03-22t231045718z",
             "my_provider"
         )
+        self.maxDiff = None
         self.assertEqual(
             incident_dict,
             {
@@ -52,7 +53,7 @@ class TestMongoOperationStorage(unittest.TestCase):
                 'id': {'away': 'memphis-grizzlies',
                        'event_group_name': 'nba-regular-season',
                        'home': 'charlotte-hornets',
-                       'sport': 'basketball',
+                       'sport': 'Basketball',
                        'start_time': '2018-03-22T23:00:00Z'},
                 'timestamp': incident_dict["timestamp"],
                 'provider_info': {'name': 'my_provider', 'pushed': incident_dict["provider_info"]["pushed"]},

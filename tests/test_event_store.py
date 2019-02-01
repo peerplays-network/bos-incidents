@@ -178,8 +178,9 @@ class TestMongoOperationStorage(unittest.TestCase):
                     self.assertEqual(incident, {'arguments': {'season': '2018'}, 'call': 'create', 'provider_info': {'name': 'scorespro', 'source_file': '20180323-001101_69528886-0574-4df5-93d4-4bffaab79a34.xml', 'pushed': '2018-03-22T23:12:01.503Z', 'bitArray': '00000001100', 'match_id': '1487356', 'source': 'direct string input'}, 'unique_string': '2018-03-22t230000z-basketball-nba-regular-season-charlotte-hornets-memphis-grizzlies-create-2018', 'id': {'home': 'Charlotte Hornets', 'start_time': '2018-03-22T23:00:00Z', 'event_group_name': 'NBA Regular Season', 'away': 'Memphis Grizzlies', 'sport': 'Basketball'}, 'timestamp': '2018-03-22T23:11:01.542156Z'})
 
     def test_add_all_from_dump(self):
-        for file in os.listdir("dump"):
-            abs_path = os.path.join("dump", file)
+        dump = os.path.join(os.path.dirname(__file__), "dump")
+        for file in os.listdir(dump):
+            abs_path = os.path.join(dump, file)
             if os.path.isfile(abs_path):
                 incident = json.loads(io.open(abs_path).read())
                 self.storage.insert_incident(incident)
