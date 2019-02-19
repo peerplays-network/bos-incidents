@@ -9,7 +9,7 @@
 
 `bos-incidents` stores incidents from the data-proxies in a mongodb so
 it's status can be tracked and displayed via command line tools in
-`bos-auto` or the web interface `bos-mint`.
+`bos-incidents` or the web interface `bos-mint`.
 
 ## Documentation
 
