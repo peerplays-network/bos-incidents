@@ -194,6 +194,7 @@ class IncidentStorage(MongoDBStorage):
         if not incident.get("id_string"):
             incident["id_string"] = id_to_string(incident)
 
+        # BOS-204 fix: Changes has been done to round-off upto 4 minutes differences in incidents between DP's(assumed standard time format from schema)
         if int(incident["id"]["start_time"][15]) in range(1, 5):
             incident["id"]["start_time"] = incident["id"]["start_time"][:15] + incident["id"]["start_time"][15:16].replace(incident["id"]["start_time"][15], "0") + incident["id"]["start_time"][16:]
         elif int(incident["id"]["start_time"][15]) in range(6, 10):
