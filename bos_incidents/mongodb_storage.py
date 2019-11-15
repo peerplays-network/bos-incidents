@@ -194,6 +194,22 @@ class IncidentStorage(MongoDBStorage):
         if not incident.get("id_string"):
             incident["id_string"] = id_to_string(incident)
 
+        # BOS-204 fix: Changes has been done to round-off upto 4 minutes differences in incidents between DP's(assumed standard time format from schema)
+        if int(incident["id"]["start_time"][15]) in range(1, 5):
+            incident["id"]["start_time"] = incident["id"]["start_time"][:15] + incident["id"]["start_time"][15:16].replace(incident["id"]["start_time"][15], "0") + incident["id"]["start_time"][16:]
+        elif int(incident["id"]["start_time"][15]) in range(6, 10):
+            incident["id"]["start_time"] = incident["id"]["start_time"][:15] + incident["id"]["start_time"][15:16].replace(incident["id"]["start_time"][15], "5") + incident["id"]["start_time"][16:]
+
+        if int(incident["unique_string"][14]) in range(1, 5):
+            incident["unique_string"] = incident["unique_string"][:14] + incident["unique_string"][14:15].replace(incident["unique_string"][14], "0") + incident["unique_string"][15:]
+        elif int(incident["unique_string"][14]) in range(6, 10):
+            incident["unique_string"] = incident["unique_string"][:14] + incident["unique_string"][14:15].replace(incident["unique_string"][14], "5") + incident["unique_string"][15:]
+
+        if int(incident["id_string"][14]) in range(1, 5):
+            incident["id_string"] = incident["id_string"][:14] + incident["id_string"][14:15].replace(incident["id_string"][14], "0") + incident["id_string"][15:]
+        elif int(incident["id_string"][14]) in range(6, 10):
+            incident["id_string"] = incident["id_string"][:14] + incident["id_string"][14:15].replace(incident["id_string"][14], "5") + incident["id_string"][15:]
+
         self.validate_incident(incident)
 
         try:
